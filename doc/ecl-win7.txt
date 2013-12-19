@@ -1,0 +1,68 @@
+Windows下使用Ecl将lisp代码编译成可执行程序
+http://seagate.iteye.com/blog/1527109
+
+Ecl是一个开源的Lisp语言实现，他最大的特点就是能作为嵌入式脚本语言来使用，另外还能将lisp代码编译生成原生的程序。
+下面介绍如何使用Visual Studio来编译Ecl。
+
+下载最新版本的Ecl代码，最新版本是12.2.1。点击下载 。
+将代码解压到指定的目录下，然后打开visual studio的命令行提示界面，进入到ecl代码目录下的msvc目录中。
+
+输入nmake，开始编译代码。
+编译完成后，输入nmake install prefix=d:\ecl 将编译好的ecl项目拷贝到d:\ecl下。
+
+进入d:\ecl，输入ecl，出现以下提示
+ECL (Embeddable Common-Lisp) 12.2.1 (git:UNKNOWN)
+Copyright (C) 1984 Taiichi Yuasa and Masami Hagiya
+Copyright (C) 1993 Giuseppe Attardi
+Copyright (C) 2000 Juan J. Garcia-Ripoll
+ECL is free software, and you are welcome to redistribute it
+under certain conditions; see file 'Copyright' for details.
+Type :h for Help.
+Top level in: #<process TOP-LEVEL>.
+> 
+
+这样ecl就安装完成了。
+
+接下来编辑一个hello.lisp的文件，保存到ecl目录下，测试下编译成可执行代码。
+代码内容如下：
+(princ "Hello world!")
+(terpri)
+(quit)
+
+这就是一个lisp版本的hello world了。按照ecl官方的manual，输入
+>(compile-file "hello.lisp" :system-p t)
+悲剧的事情出现了，编译成c语言的步骤为nil，编译终止了。在这卡了很久，包括到处google。
+
+最后到mail list下搜索，发现正确步骤：
+> (require :cmp)
+
+;;; Loading #P"D:/ECL/cmp.fas"
+("CMP")
+
+> (setf C::*COMPILE-IN-CONSTANTS* t)
+
+T
+
+再输入
+> (compile-file "hello.lisp" :system-p t)
+
+;;;
+;;; Compiling hello.lisp.
+;;; OPTIMIZE levels: Safety=2, Space=0, Speed=3, Debug=0
+;;;
+;;; End of Pass 1.hello.c
+
+;;; Finished compiling hello.lisp.
+;;;
+#P"D:/ECL/hello.obj"
+NIL
+NIL
+> (c:build-program "myecl" :lisp-files '("hello.obj"))
+eB1tmp.c
+   正在创建库 D:/ECL/myecl.lib 和对象 D:/ECL/myecl.exp
+
+#P"myecl.exe"
+
+查看ecl文件夹下，多出来一个myecl.exe，看来ecl确实不错。
+他的问题是开发人员似乎很少，所以项目的文档旧而且奇缺。
+
